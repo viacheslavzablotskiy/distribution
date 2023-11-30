@@ -1,16 +1,19 @@
 from django.shortcuts import render, get_object_or_404
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets
 
 from user_backend.models import User
 from .models import Mailing, Client, Message
+from .permissoins import IsOwnerOrReadOnly, AdminOrReadOnly
 from .serializers import MailingSerializer, ClientSerializer, MessageSerializer
 
 
 class ClientViewSet(viewsets.ModelViewSet):
     serializer_class = ClientSerializer
     queryset = Client.objects.all()
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthenticated, IsOwnerOrReadOnly, AdminOrReadOnly]
 
     def perform_create(self, serializer):
         user = self.request.user.id
@@ -21,11 +24,13 @@ class ClientViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     queryset = Message.objects.all()
+    permission_classes = [IsAuthenticated]
 
 
 class MailingViewSet(viewsets.ModelViewSet):
     serializer_class = MailingSerializer
     queryset = Mailing.objects.all()
+    permission_classes = [IsAdminUser]
 
     @action(detail=True, methods=["get"])
     def info(self, request, pk=None):
